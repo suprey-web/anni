@@ -1,0 +1,295 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  #scene {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #ffe0f0 0%, #ffb3d1 30%, #ff85b8 60%, #ff5fa0 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: Georgia, serif;
+    padding: 40px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .floating-hearts { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .fh {
+    position: absolute; bottom: -30px;
+    animation: floatUp linear infinite; opacity: 0;
+    color: #fff; user-select: none;
+  }
+  @keyframes floatUp {
+    0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.75; }
+    90%  { opacity: 0.4; }
+    100% { transform: translateY(-110vh) scale(1.3) rotate(25deg); opacity: 0; }
+  }
+
+  .title {
+    color: #fff; font-size: 17px; font-weight: 400;
+    letter-spacing: 2.5px; margin-bottom: 28px;
+    text-align: center; font-style: italic;
+    text-shadow: 0 2px 12px rgba(180,30,80,0.25);
+  }
+
+  /* music button */
+  #music-btn {
+    display: flex; align-items: center; gap: 9px;
+    background: rgba(255,255,255,0.22);
+    border: 1.5px solid rgba(255,255,255,0.6);
+    color: #fff;
+    font-family: Georgia, serif;
+    font-size: 13px; font-style: italic;
+    letter-spacing: 1.5px;
+    padding: 10px 22px;
+    border-radius: 40px;
+    cursor: pointer;
+    margin-bottom: 36px;
+    backdrop-filter: blur(6px);
+    transition: background 0.25s, transform 0.2s, box-shadow 0.25s;
+    text-decoration: none;
+    box-shadow: 0 4px 18px rgba(180,30,80,0.18);
+  }
+  #music-btn:hover {
+    background: rgba(255,255,255,0.36);
+    transform: scale(1.05);
+    box-shadow: 0 6px 24px rgba(180,30,80,0.28);
+  }
+  #music-btn:active { transform: scale(0.98); }
+
+  .music-icon {
+    width: 28px; height: 28px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.5); }
+    50%      { box-shadow: 0 0 0 7px rgba(255,255,255,0); }
+  }
+
+  #envelope-wrap {
+    cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; gap: 18px; transition: transform 0.25s;
+  }
+  #envelope-wrap:hover { transform: scale(1.05); }
+  #envelope-wrap:hover .click-hint { opacity: 1; }
+
+  .click-hint {
+    color: #fff; font-size: 13px; letter-spacing: 2px;
+    opacity: 0.65; transition: opacity 0.3s; font-style: italic;
+  }
+
+  .envelope-svg { filter: drop-shadow(0 10px 36px rgba(200,40,100,0.35)); }
+
+  #flap {
+    transform-origin: 145px 65px;
+    transition: transform 0.55s cubic-bezier(0.4,0,0.2,1);
+  }
+  #flap.opened { transform: rotateX(180deg); }
+
+  #letter-slide {
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.4s 0.35s, transform 0.4s 0.35s;
+    pointer-events: none;
+  }
+  #letter-slide.out { opacity: 1; transform: translateY(-10px); pointer-events: auto; }
+
+  .burst-heart {
+    position: absolute; font-size: 18px; pointer-events: none;
+    animation: burst 0.8s ease-out forwards;
+  }
+  @keyframes burst {
+    0%   { opacity: 1; transform: translate(0,0) scale(0.5); }
+    100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(1.4); }
+  }
+
+  #letter-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(80,5,40,0.75); z-index: 100;
+    align-items: center; justify-content: center;
+    padding: 20px; animation: fadeIn 0.35s ease;
+  }
+  #letter-overlay.open { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  #letter-card {
+    background: #fdf8f2; border-radius: 4px;
+    max-width: 540px; width: 100%; max-height: 88vh;
+    overflow-y: auto; padding: 52px 48px; position: relative;
+    animation: slideUp 0.5s cubic-bezier(0.22,1,0.36,1);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    border: 1px solid #f0d0da;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(70px) scale(0.94); }
+    to   { opacity: 1; transform: translateY(0)   scale(1); }
+  }
+  #letter-card::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(transparent, transparent 31px, #f0d0da 31px, #f0d0da 32px);
+    border-radius: 4px; opacity: 0.35; pointer-events: none;
+  }
+
+  .letter-date     { font-size: 12px; color: #a06070; text-align: right; margin-bottom: 30px; font-style: italic; position: relative; }
+  .letter-greeting { font-size: 22px; color: #3d1a2e; font-style: italic; margin-bottom: 22px; position: relative; }
+  .letter-body     { font-size: 15px; line-height: 2; color: #3a2020; position: relative; }
+  .letter-body p   { margin-bottom: 22px; }
+  .letter-closing  { margin-top: 38px; font-size: 15px; color: #3a2020; position: relative; }
+  .letter-sig      { font-size: 26px; color: #b02060; font-style: italic; margin-top: 10px; font-family: 'Palatino Linotype', Palatino, serif; position: relative; }
+  .letter-hearts   { text-align: center; font-size: 18px; margin-top: 18px; letter-spacing: 8px; position: relative; }
+
+  /* music note inside letter */
+  .letter-music {
+    margin-top: 28px; text-align: center; position: relative;
+  }
+  .letter-music a {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: #b02060; font-size: 13px; font-style: italic;
+    text-decoration: none; letter-spacing: 1px;
+    border-bottom: 1px dashed #e090b0;
+    padding-bottom: 2px; transition: color 0.2s;
+  }
+  .letter-music a:hover { color: #80103a; }
+
+  #close-btn {
+    position: absolute; top: 14px; right: 18px;
+    background: none; border: none; font-size: 22px;
+    color: #b08090; cursor: pointer; padding: 4px; transition: color 0.2s;
+  }
+  #close-btn:hover { color: #b02060; }
+
+  .wax { display: flex; align-items: center; justify-content: center; margin-top: 28px; }
+</style>
+
+<div id="scene">
+  <div class="floating-hearts" id="fhearts"></div>
+
+  <div class="title">✦ a message for my love, julli ✦</div>
+
+  <a id="music-btn" href="https://youtu.be/n5i3QRvPA9Y?si=pV8vxr4mFNdECFB0" target="_blank" rel="noopener">
+    <div class="music-icon">♪</div>
+    play our song while you read ♥
+  </a>
+
+  <div id="envelope-wrap" onclick="triggerOpen()">
+    <div style="position:relative;display:inline-block;" id="env-container">
+      <svg id="env-svg" class="envelope-svg" width="290" height="210" viewBox="0 0 290 210" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="65" width="270" height="135" rx="6" fill="#fff0f6" stroke="#e07098" stroke-width="1.5"/>
+        <polygon points="10,200 145,128 280,200" fill="#fad0e0" stroke="#e07098" stroke-width="1"/>
+        <polygon points="10,65 10,200 108,138" fill="#f8e0ea" stroke="#e07098" stroke-width="0.8"/>
+        <polygon points="280,65 280,200 182,138" fill="#f8e0ea" stroke="#e07098" stroke-width="0.8"/>
+        <g id="flap">
+          <polygon points="10,65 145,140 280,65" fill="#fbbdd0" stroke="#e07098" stroke-width="1.5"/>
+        </g>
+        <circle cx="145" cy="138" r="24" fill="#d03060"/>
+        <circle cx="145" cy="138" r="19" fill="#b02050" stroke="#f090b0" stroke-width="0.8"/>
+        <text x="145" y="144" text-anchor="middle" font-size="17" fill="#ffd0e0">♥</text>
+        <line x1="38" y1="162" x2="100" y2="162" stroke="#e07098" stroke-width="0.5" opacity="0.4"/>
+        <line x1="190" y1="162" x2="252" y2="162" stroke="#e07098" stroke-width="0.5" opacity="0.4"/>
+        <text x="52"  y="100" font-size="10" fill="#e07098" opacity="0.5">♥</text>
+        <text x="228" y="98"  font-size="9"  fill="#e07098" opacity="0.4">♥</text>
+        <text x="240" y="115" font-size="7"  fill="#e07098" opacity="0.3">♥</text>
+        <text x="38"  y="115" font-size="7"  fill="#e07098" opacity="0.3">♥</text>
+      </svg>
+      <div id="letter-slide" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);width:200px;height:70px;background:#fdf8f0;border:1px solid #f0c8d0;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#c06080;font-style:italic;z-index:-1;">
+        for you, julli ♥
+      </div>
+    </div>
+    <span class="click-hint">tap to open ✦</span>
+  </div>
+</div>
+
+<div id="letter-overlay" onclick="handleOverlay(event)">
+  <div id="letter-card">
+    <button id="close-btn" onclick="closeLetter()">✕</button>
+    <div class="letter-date">May 13, 2026 — 14 Months 🎉</div>
+    <div class="letter-greeting">hyyyy bachaaaa!! 🥺💕</div>
+    <div class="letter-body">
+      <p>HAPPYYYY 14TH MONTHHHHHHHHHHH ANNIVERSARYYYYYYYY MY SWWEETTTTTT LOVIEEEEEEEEEEEEEEE!! 🎊🎊🎊</p>
+      <p>immm soo proud off uss thaha xa kinaa — cozz nott most of the couple last thiss long nii heheee... and herree we areee!! 🥹 sangaii vakooo niii, 14 month vaisakiyoooo heheheeee.</p>
+      <p>14 month samma pugnaa nii dheraii struggle haruu and yeta utti lagyoo butt kehi vayee naa — we stil made itt!! and ikk kii paxii nii we will doo itt vaneraaaa cozz we cann. heheee. 💪🏻</p>
+      <p>once again — HAPPYYY 14THH MONTHH ANIVERSARYY BACHAAAAAAAAAAA... i thought off making smth diff yoo paliii... sadhaii tehhiii tyoo chatt ma vannuu vandaa smthh that'd last alikkk wow vannee hosss na vaneraa. i made uhh a website — dheraii ta banaunaa painna cozz yoo idea diusoo varkharr aako othiyoo huhuhuu.. still i did my best huhuu 🥺</p>
+      <p>aniii sannaa — life is hardd haii butt still we have to go thru itt haii bachaaaa. anii j jstoo vayeeninii ill always be thereee and we aree soo llucky to have eachothers sside on uss hehehee. 🍀</p>
+      <p>aniii loong distance vayee ill always be there for uhh. aailee ta dheraii kehii garna sakekoo xna butt paxxii sngaii vayesii paisa kamaunee vayesii — ill give the world. uhh deserve jaha tmee ranii maii raja hune xamm. huhuuuu 👑</p>
+      <p>recently hamii bichhh dherai ups and downs aira xaa but still we have stayed together — anddd paxxi ni well be togetheeeerr haii aniii. aba xittaii vetdaii xaa hai kk katii memories banaunuu xaa muhehehe 🥰🥰🥰</p>
+      <p>iloveuhhhhh soo soos oooooo muchh and will alwyssss loveuhhhh andd even iff the world is againstt uhh ill fightt forr uhhh till thee veryy endd 💗💗💗</p>
+      <p>anddd oncee againnnn... HAPPIESTTT 14THH MONTHHHH-ANNIVERSAERYYYYY MYY LOVEEEEE 🎊🎊🎊💕💕💕</p>
+    </div>
+    <div class="letter-closing">forever yours, always and always —</div>
+    <div class="letter-sig">sup ♥</div>
+    <div class="letter-hearts">♥ &nbsp; ♥ &nbsp; ♥</div>
+
+    <div class="letter-music">
+      <a href="https://youtu.be/n5i3QRvPA9Y?si=pV8vxr4mFNdECFB0" target="_blank" rel="noopener">
+        ♪ &nbsp; play our song
+      </a>
+    </div>
+
+    <div class="wax">
+      <svg width="52" height="52" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="26" cy="26" r="24" fill="#d03060"/>
+        <circle cx="26" cy="26" r="20" fill="#b02050" stroke="#f090b0" stroke-width="0.5"/>
+        <text x="26" y="32" text-anchor="middle" font-size="20" fill="#ffd0e0">♥</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<script>
+  const fh = document.getElementById('fhearts');
+  const hSymbols = ['♥','♡','❤','💕'];
+  for (let i = 0; i < 28; i++) {
+    const el = document.createElement('div');
+    el.className = 'fh';
+    el.textContent = hSymbols[Math.floor(Math.random()*hSymbols.length)];
+    const size = Math.random()*14+8;
+    const dur  = (Math.random()*10+8).toFixed(1);
+    const del  = (Math.random()*12).toFixed(1);
+    el.style.cssText = `left:${Math.random()*100}%;font-size:${size}px;animation-duration:${dur}s;animation-delay:${del}s;color:rgba(255,255,255,${(Math.random()*0.5+0.3).toFixed(2)})`;
+    fh.appendChild(el);
+  }
+
+  let opened = false;
+
+  function triggerOpen() {
+    if (opened) return;
+    opened = true;
+    document.getElementById('flap').classList.add('opened');
+    setTimeout(() => { document.getElementById('letter-slide').classList.add('out'); }, 300);
+    setTimeout(() => burstHearts(), 200);
+    setTimeout(() => {
+      document.getElementById('letter-overlay').classList.add('open');
+      opened = false;
+    }, 900);
+    setTimeout(() => {
+      document.getElementById('flap').classList.remove('opened');
+      document.getElementById('letter-slide').classList.remove('out');
+    }, 950);
+  }
+
+  function burstHearts() {
+    const wrap = document.getElementById('env-container');
+    const rect = wrap.getBoundingClientRect();
+    const cx = rect.left + rect.width/2;
+    const cy = rect.top  + rect.height/2;
+    for (let i = 0; i < 14; i++) {
+      const h = document.createElement('div');
+      h.className = 'burst-heart';
+      h.textContent = ['♥','♡','❤'][Math.floor(Math.random()*3)];
+      const angle = (Math.PI*2/14)*i + (Math.random()-0.5)*0.4;
+      const dist  = 60 + Math.random()*60;
+      h.style.cssText = `left:${cx}px;top:${cy}px;color:#ff4488;--tx:${Math.cos(angle)*dist}px;--ty:${Math.sin(angle)*dist}px;animation-delay:${(Math.random()*0.15).toFixed(2)}s;font-size:${Math.floor(Math.random()*12+12)}px;position:fixed;z-index:99;`;
+      document.body.appendChild(h);
+      setTimeout(() => h.remove(), 1000);
+    }
+  }
+
+  function closeLetter() { document.getElementById('letter-overlay').classList.remove('open'); }
+  function handleOverlay(e) { if (e.target === document.getElementById('letter-overlay')) closeLetter(); }
+</script>
